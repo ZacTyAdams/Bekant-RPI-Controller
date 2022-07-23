@@ -6,6 +6,7 @@ from urllib import response
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 import sys
+import subprocess
 
 app = Flask(__name__)
 
@@ -39,8 +40,25 @@ class Square(Resource):
         return jsonify({'square': num**2})
 
 class Desk(Resource):
-    
+    def move_desk(function):
+        if sys.platform != 'linux':
+            print('MacOS: desk going ' + function)
+        else:
+            if function == 'up':
+                print('Linux: desk going up')
+                subprocess.call(['up'], shell=True)
+                return 201
+            elif function == 'down':
+                print('Linux: desk going down')
+                subprocess.call(['down'], shell=True)
+                return 201
+            elif function == 'stop':
+                print('Linux: stopping desk movement')
+                subprocess.call(['stop'], shell=True)
+                return 201
+
     def get(self):
+        print(self.methods)
         print(request)
         if sys.platform != 'linux':
             response = jsonify({'height':'MacOS: 50'})
@@ -59,8 +77,7 @@ class Desk(Resource):
             resp.status_code = 201
             return resp
         else:
-            resp = jsonify({'message': str('Linux: desk going ' + data['function'])})
-            resp.status_code = 201
+            resp.status_code = move_desk(data['function'])
             return resp
 
         # print("received post request")
