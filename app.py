@@ -7,6 +7,7 @@ from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 import sys
 import subprocess
+import os
 
 app = Flask(__name__)
 
@@ -40,22 +41,34 @@ class Square(Resource):
         return jsonify({'square': num**2})
 
 class Desk(Resource):
-    def move_desk(function):
+    def move_desk(self, function):
         if sys.platform != 'linux':
             print('MacOS: desk going ' + function)
+            return 201
         else:
+            cwd = os.getcwd()
+            print(cwd)
             if function == 'up':
                 print('Linux: desk going up')
-                subprocess.call(['up'], shell=True)
+                subprocess.call([os.path.join(cwd, 'up.sh')], shell=True)
                 return 201
             elif function == 'down':
                 print('Linux: desk going down')
-                subprocess.call(['down'], shell=True)
+                subprocess.call([os.path.join(cwd, 'down.sh')], shell=True)
                 return 201
             elif function == 'stop':
                 print('Linux: stopping desk movement')
-                subprocess.call(['stop'], shell=True)
+                subprocess.call([os.path.join(cwd, 'stop.sh')], shell=True)
                 return 201
+            elif function == 'sit':
+                print('Linux: desk going sit')
+                subprocess.call([os.path.join(cwd, 'sit.sh')], shell=True)
+                return 201
+            elif function == 'stand':
+                print('Linux: desk going stand')
+                subprocess.call([os.path.join(cwd, 'stand.sh')], shell=True)
+                return 201
+        return 500
 
     def get(self):
         print(self.methods)
@@ -65,7 +78,7 @@ class Desk(Resource):
             response.status_code = 200
             return response
         else:
-            response = jsonify({'height': 'Linux: 50'})
+            response = jsonify({'service': 'online', 'height': 'Linux: 50'})
             response.status_code = 200
             return response
     
@@ -77,8 +90,9 @@ class Desk(Resource):
             resp.status_code = 201
             return resp
         else:
-            resp.status_code = move_desk(data['function'])
-            return resp
+            response = jsonify({'message': str('Linux: desk going ' + data['function'])})
+            response.status_code = self.move_desk(data['function'])
+            return response
 
         # print("received post request")
         # print(request)
